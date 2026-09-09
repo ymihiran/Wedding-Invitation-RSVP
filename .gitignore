@@ -16,6 +16,7 @@
 # next.js
 /.next/
 /out/
+.netlify/
 
 # production
 /build
@@ -39,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local guest store
+.data/
+
+# keep the env template
+!.env.example

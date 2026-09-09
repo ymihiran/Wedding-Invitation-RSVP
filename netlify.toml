@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NEXT_PUBLIC_SITE_URL = "https://celadon-puffpuff-f2e058.netlify.app"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
