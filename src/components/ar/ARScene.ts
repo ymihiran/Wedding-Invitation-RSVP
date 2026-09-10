@@ -35,18 +35,104 @@ function makeCanvasTexture(
   return texture;
 }
 
-function drawLabel(
+function goldGradient(
   ctx: CanvasRenderingContext2D,
-  text: string,
-  font: string,
-  color: string,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
 ) {
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  ctx.fillStyle = color;
+  const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+  gradient.addColorStop(0, "#bf953f");
+  gradient.addColorStop(0.28, "#fcf6ba");
+  gradient.addColorStop(0.5, "#b38728");
+  gradient.addColorStop(0.78, "#fbf5b7");
+  gradient.addColorStop(1, "#aa771c");
+  return gradient;
+}
+
+function drawStackedNames(ctx: CanvasRenderingContext2D) {
+  const { width, height } = ctx.canvas;
+  ctx.clearRect(0, 0, width, height);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = font;
-  ctx.fillText(text, ctx.canvas.width / 2, ctx.canvas.height / 2);
+  const x = width / 2;
+  const foil = goldGradient(ctx, width * 0.18, height * 0.08, width * 0.82, height * 0.92);
+  ctx.strokeStyle = "rgba(90, 64, 28, 0.45)";
+  ctx.lineWidth = 3;
+  ctx.lineJoin = "round";
+
+  ctx.font = "92px 'Great Vibes', 'Playfair Display', serif";
+  ctx.strokeText(wedding.groom.first, x, height * 0.22);
+  ctx.fillStyle = foil;
+  ctx.fillText(wedding.groom.first, x, height * 0.22);
+
+  ctx.font = "54px 'Cormorant Garamond', serif";
+  ctx.fillText("&", x, height * 0.5);
+
+  ctx.font = "92px 'Great Vibes', 'Playfair Display', serif";
+  ctx.strokeText(wedding.bride.first, x, height * 0.78);
+  ctx.fillStyle = foil;
+  ctx.fillText(wedding.bride.first, x, height * 0.78);
+}
+
+function drawDate(ctx: CanvasRenderingContext2D) {
+  const { width, height } = ctx.canvas;
+  ctx.clearRect(0, 0, width, height);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "36px Cinzel, 'Cormorant Garamond', serif";
+  ctx.fillStyle = goldGradient(ctx, width * 0.15, 0, width * 0.85, height);
+  ctx.fillText(wedding.dateDisplay, width / 2, height / 2);
+}
+
+function createGoldEnv(THREE: ThreeNS): THREE.CubeTexture {
+  const size = 48;
+  const face = (top: string, bottom: string, gleam = false) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return canvas;
+    const gradient = ctx.createLinearGradient(0, 0, 0, size);
+    gradient.addColorStop(0, top);
+    gradient.addColorStop(1, bottom);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+    if (gleam) {
+      ctx.fillStyle = "rgba(255, 252, 235, 0.92)";
+      ctx.fillRect(size * 0.12, size * 0.08, size * 0.3, size * 0.2);
+      ctx.fillStyle = "rgba(255, 244, 210, 0.55)";
+      ctx.fillRect(size * 0.58, size * 0.42, size * 0.22, size * 0.16);
+    }
+    return canvas;
+  };
+
+  const texture = new THREE.CubeTexture([
+    face("#f3e0a8", "#8d6a28", true),
+    face("#c9a45c", "#5a4018"),
+    face("#fff8de", "#e8c56a"),
+    face("#6b4e20", "#2f210e"),
+    face("#f0d78c", "#7a5620", true),
+    face("#b8944a", "#463214"),
+  ]);
+  texture.needsUpdate = true;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createGoldMaterial(THREE: ThreeNS, envMap: THREE.CubeTexture) {
+  return new THREE.MeshPhysicalMaterial({
+    color: 0xd4af37,
+    metalness: 1,
+    roughness: 0.14,
+    envMap,
+    envMapIntensity: 1.65,
+    clearcoat: 0.55,
+    clearcoatRoughness: 0.12,
+    transparent: true,
+    opacity: 0,
+  });
 }
 
 function petalTexture(THREE: ThreeNS): THREE.CanvasTexture {
@@ -82,45 +168,32 @@ export function createARScene(
     opacity: 0,
   };
 
-  const hemi = new THREE.HemisphereLight(0xfff6e0, 0x4a372b, 0.95);
-  const key = new THREE.DirectionalLight(0xffe6b0, 0.85);
-  key.position.set(0.4, 0.8, 1.2);
-  scene.add(hemi, key);
+  const envMap = createGoldEnv(THREE);
+  const hemi = new THREE.HemisphereLight(0xfff4d4, 0x3d2a16, 0.7);
+  const key = new THREE.DirectionalLight(0xfff1c8, 1.15);
+  key.position.set(0.55, 0.9, 1.1);
+  const fill = new THREE.DirectionalLight(0xffe6b0, 0.35);
+  fill.position.set(-0.7, 0.2, 0.6);
+  scene.add(hemi, key, fill);
 
-  const gold = new THREE.MeshStandardMaterial({
-    color: 0xc5a059,
-    metalness: 0.82,
-    roughness: 0.28,
-    transparent: true,
-    opacity: 0,
-  });
-  const ringGeo = new THREE.TorusGeometry(0.13, 0.028, 14, 40);
+  const gold = createGoldMaterial(THREE, envMap);
+  const goldB = createGoldMaterial(THREE, envMap);
+  const ringGeo = new THREE.TorusGeometry(0.145, 0.016, 32, 96);
   const ringA = new THREE.Mesh(ringGeo, gold);
-  const ringB = new THREE.Mesh(ringGeo, gold.clone());
-  ringA.rotation.x = Math.PI / 2.15;
-  ringB.rotation.y = Math.PI / 2.1;
-  ringB.position.set(0.09, 0, 0);
+  const ringB = new THREE.Mesh(ringGeo, goldB);
+  ringA.rotation.set(Math.PI / 2.05, 0.18, 0.12);
+  ringB.rotation.set(Math.PI / 2.35, Math.PI / 2.05, -0.16);
+  ringB.position.set(0.1, 0.01, 0.01);
+  ringB.scale.setScalar(0.94);
   const rings = new THREE.Group();
-  rings.position.set(0, 0.02, 0.22);
-  rings.add(ringA, ringB);
+  rings.position.set(0, 0.04, 0.26);
+  const shine = new THREE.PointLight(0xfff6d8, 1.6, 1.8);
+  shine.position.set(0.28, 0.22, 0.4);
+  rings.add(ringA, ringB, shine);
   root.add(rings);
 
-  const nameTexture = makeCanvasTexture(THREE, 1024, 256, (ctx) => {
-    drawLabel(
-      ctx,
-      wedding.coupleShort,
-      "72px 'Great Vibes', 'Playfair Display', serif",
-      "#f7f3eb",
-    );
-  });
-  const dateTexture = makeCanvasTexture(THREE, 1024, 160, (ctx) => {
-    drawLabel(
-      ctx,
-      wedding.dateDisplay,
-      "32px Cinzel, 'Cormorant Garamond', serif",
-      "#c5a059",
-    );
-  });
+  const nameTexture = makeCanvasTexture(THREE, 768, 1280, drawStackedNames);
+  const dateTexture = makeCanvasTexture(THREE, 1024, 160, drawDate);
   const nameMat = new THREE.MeshBasicMaterial({
     map: nameTexture,
     transparent: true,
@@ -133,10 +206,10 @@ export function createARScene(
     opacity: 0,
     depthWrite: false,
   });
-  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.25), nameMat);
+  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.7), nameMat);
   const datePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.13), dateMat);
-  namePlane.position.set(0, 0.38, 0.08);
-  datePlane.position.set(0, -0.34, 0.08);
+  namePlane.position.set(0, 0.42, 0.14);
+  datePlane.position.set(0, -0.38, 0.1);
   root.add(namePlane, datePlane);
 
   void document.fonts.ready.then(() => {
@@ -145,21 +218,11 @@ export function createARScene(
     const nameCtx = named.getContext("2d");
     const dateCtx = dated.getContext("2d");
     if (nameCtx) {
-      drawLabel(
-        nameCtx,
-        wedding.coupleShort,
-        "72px 'Great Vibes', 'Playfair Display', serif",
-        "#f7f3eb",
-      );
+      drawStackedNames(nameCtx);
       nameTexture.needsUpdate = true;
     }
     if (dateCtx) {
-      drawLabel(
-        dateCtx,
-        wedding.dateDisplay,
-        "32px Cinzel, 'Cormorant Garamond', serif",
-        "#c5a059",
-      );
+      drawDate(dateCtx);
       dateTexture.needsUpdate = true;
     }
   });
@@ -233,7 +296,7 @@ export function createARScene(
 
   const fadeMaterials: THREE.Material[] = [
     gold,
-    ringB.material as THREE.Material,
+    goldB,
     nameMat,
     dateMat,
     sparkMat,
@@ -281,10 +344,16 @@ export function createARScene(
       if (!detected || options.reducedMotion) return;
 
       const t = timeMs * 0.001;
-      rings.rotation.z = t * 0.25;
-      rings.position.z = 0.22 + Math.sin(t * 1.2) * 0.02;
-      namePlane.position.y = 0.38 + Math.sin(t) * 0.01;
-      datePlane.position.y = -0.34 + Math.cos(t) * 0.008;
+      rings.rotation.y = Math.sin(t * 0.35) * 0.18;
+      rings.rotation.z = t * 0.12;
+      rings.position.z = 0.26 + Math.sin(t * 1.15) * 0.018;
+      shine.position.set(
+        Math.cos(t * 1.5) * 0.34,
+        0.18 + Math.sin(t * 1.1) * 0.12,
+        0.38 + Math.cos(t * 0.9) * 0.1,
+      );
+      namePlane.position.y = 0.42 + Math.sin(t) * 0.012;
+      datePlane.position.y = -0.38 + Math.cos(t) * 0.008;
 
       const positions = sparkGeo.getAttribute("position");
       for (let i = 0; i < sparkCount; i += 1) {
@@ -313,9 +382,12 @@ export function createARScene(
       sparkMat.map?.dispose();
       petalMat.map?.dispose();
       for (const material of fadeMaterials) material.dispose();
-      scene.remove(hemi, key);
+      envMap.dispose();
+      scene.remove(hemi, key, fill);
       hemi.dispose();
       key.dispose();
+      fill.dispose();
+      shine.dispose();
     },
   };
 }
