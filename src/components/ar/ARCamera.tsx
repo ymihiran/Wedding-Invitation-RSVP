@@ -96,8 +96,10 @@ export function ARCamera({
         uiLoading: "no",
         uiScanning: "no",
         uiError: "no",
-        missTolerance: 10,
-        warmupTolerance: 5,
+        filterMinCF: 0.00008,
+        filterBeta: 0.0008,
+        missTolerance: 18,
+        warmupTolerance: 8,
       });
 
       if ("outputColorSpace" in mindar.renderer) {
@@ -116,7 +118,6 @@ export function ARCamera({
       sceneRef.current = handle;
 
       const anchor = mindar.addAnchor(AR_TARGET_INDEX);
-      anchor.group.add(handle.root);
       anchor.onTargetFound = () => {
         handle.onFound();
         onStatusRef.current("detected");
@@ -135,6 +136,7 @@ export function ARCamera({
       onStatusRef.current("scanning");
       mindar.renderer.setAnimationLoop(() => {
         if (!mindar) return;
+        handle.follow(anchor.group);
         handle.update(performance.now());
         mindar.renderer.render(mindar.scene, mindar.camera);
         if (mindar.cssRenderer && mindar.cssScene) {

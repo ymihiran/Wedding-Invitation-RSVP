@@ -11,6 +11,7 @@ export type ARSceneOptions = {
 
 export type ARSceneHandle = {
   root: THREE.Group;
+  follow: (source: THREE.Object3D) => void;
   setMuted: (muted: boolean) => void;
   onFound: () => void;
   onLost: () => void;
@@ -62,18 +63,18 @@ function drawStackedNames(ctx: CanvasRenderingContext2D) {
   ctx.lineWidth = 3;
   ctx.lineJoin = "round";
 
-  ctx.font = "92px 'Great Vibes', 'Playfair Display', serif";
-  ctx.strokeText(wedding.groom.first, x, height * 0.22);
+  ctx.font = "88px 'Great Vibes', 'Playfair Display', serif";
+  ctx.strokeText(wedding.groom.first, x, height * 0.24);
   ctx.fillStyle = foil;
-  ctx.fillText(wedding.groom.first, x, height * 0.22);
+  ctx.fillText(wedding.groom.first, x, height * 0.24);
 
-  ctx.font = "54px 'Cormorant Garamond', serif";
+  ctx.font = "40px 'Cormorant Garamond', serif";
   ctx.fillText("&", x, height * 0.5);
 
-  ctx.font = "92px 'Great Vibes', 'Playfair Display', serif";
-  ctx.strokeText(wedding.bride.first, x, height * 0.78);
+  ctx.font = "88px 'Great Vibes', 'Playfair Display', serif";
+  ctx.strokeText(wedding.bride.first, x, height * 0.76);
   ctx.fillStyle = foil;
-  ctx.fillText(wedding.bride.first, x, height * 0.78);
+  ctx.fillText(wedding.bride.first, x, height * 0.76);
 }
 
 function drawDate(ctx: CanvasRenderingContext2D) {
@@ -168,30 +169,33 @@ export function createARScene(
     opacity: 0,
   };
 
+  scene.add(root);
+
   const envMap = createGoldEnv(THREE);
-  const hemi = new THREE.HemisphereLight(0xfff4d4, 0x3d2a16, 0.7);
-  const key = new THREE.DirectionalLight(0xfff1c8, 1.15);
-  key.position.set(0.55, 0.9, 1.1);
-  const fill = new THREE.DirectionalLight(0xffe6b0, 0.35);
-  fill.position.set(-0.7, 0.2, 0.6);
+  const hemi = new THREE.HemisphereLight(0xfff4d4, 0x3d2a16, 0.65);
+  const key = new THREE.DirectionalLight(0xfff1c8, 1.05);
+  key.position.set(0.45, 0.7, 1);
+  const fill = new THREE.DirectionalLight(0xffe6b0, 0.28);
+  fill.position.set(-0.55, 0.15, 0.5);
   scene.add(hemi, key, fill);
 
   const gold = createGoldMaterial(THREE, envMap);
   const goldB = createGoldMaterial(THREE, envMap);
-  const ringGeo = new THREE.TorusGeometry(0.145, 0.016, 32, 96);
+  const ringGeo = new THREE.TorusGeometry(0.11, 0.014, 32, 96);
   const ringA = new THREE.Mesh(ringGeo, gold);
   const ringB = new THREE.Mesh(ringGeo, goldB);
-  ringA.rotation.set(Math.PI / 2.05, 0.18, 0.12);
-  ringB.rotation.set(Math.PI / 2.35, Math.PI / 2.05, -0.16);
-  ringB.position.set(0.1, 0.01, 0.01);
+  ringA.rotation.set(Math.PI / 2.05, 0.16, 0.1);
+  ringB.rotation.set(Math.PI / 2.35, Math.PI / 2.05, -0.14);
+  ringB.position.set(0.08, 0.008, 0.008);
   ringB.scale.setScalar(0.94);
   const rings = new THREE.Group();
-  rings.position.set(0, 0.04, 0.26);
-  const shine = new THREE.PointLight(0xfff6d8, 1.6, 1.8);
-  shine.position.set(0.28, 0.22, 0.4);
+  rings.position.set(0, -0.02, 0.16);
+  const shine = new THREE.PointLight(0xfff6d8, 1.15, 1.5);
+  shine.position.set(0.2, 0.16, 0.28);
   rings.add(ringA, ringB, shine);
   root.add(rings);
 
+  const upright = Math.PI / 2 - 0.2;
   const nameTexture = makeCanvasTexture(THREE, 768, 1280, drawStackedNames);
   const dateTexture = makeCanvasTexture(THREE, 1024, 160, drawDate);
   const nameMat = new THREE.MeshBasicMaterial({
@@ -199,17 +203,21 @@ export function createARScene(
     transparent: true,
     opacity: 0,
     depthWrite: false,
+    side: THREE.DoubleSide,
   });
   const dateMat = new THREE.MeshBasicMaterial({
     map: dateTexture,
     transparent: true,
     opacity: 0,
     depthWrite: false,
+    side: THREE.DoubleSide,
   });
-  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.55), nameMat);
-  const datePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.13), dateMat);
-  namePlane.position.set(0, 0.06, 0.42);
-  datePlane.position.set(0, -0.22, 0.28);
+  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.34), nameMat);
+  const datePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.055), dateMat);
+  namePlane.rotation.x = upright;
+  datePlane.rotation.x = upright;
+  namePlane.position.set(0, 0.2, 0.22);
+  datePlane.position.set(0, 0.2, 0.04);
   root.add(namePlane, datePlane);
 
   void document.fonts.ready.then(() => {
@@ -227,19 +235,19 @@ export function createARScene(
     }
   });
 
-  const sparkCount = options.reducedMotion ? 12 : 48;
+  const sparkCount = options.reducedMotion ? 8 : 22;
   const sparkPositions = new Float32Array(sparkCount * 3);
   for (let i = 0; i < sparkCount; i += 1) {
-    sparkPositions[i * 3] = (Math.random() - 0.5) * 1.1;
-    sparkPositions[i * 3 + 1] = (Math.random() - 0.5) * 1.3;
-    sparkPositions[i * 3 + 2] = 0.05 + Math.random() * 0.35;
+    sparkPositions[i * 3] = (Math.random() - 0.5) * 0.55;
+    sparkPositions[i * 3 + 1] = (Math.random() - 0.5) * 0.4;
+    sparkPositions[i * 3 + 2] = 0.06 + Math.random() * 0.22;
   }
   const sparkGeo = new THREE.BufferGeometry();
   sparkGeo.setAttribute("position", new THREE.BufferAttribute(sparkPositions, 3));
   const sparkMat = new THREE.PointsMaterial({
     map: sparkTexture(THREE),
     color: 0xf0d78c,
-    size: 0.045,
+    size: 0.032,
     transparent: true,
     opacity: 0,
     depthWrite: false,
@@ -248,7 +256,7 @@ export function createARScene(
   const sparks = new THREE.Points(sparkGeo, sparkMat);
   root.add(sparks);
 
-  const petalCount = options.reducedMotion ? 0 : 8;
+  const petalCount = options.reducedMotion ? 0 : 5;
   const petals: THREE.Mesh[] = [];
   const petalMat = new THREE.MeshBasicMaterial({
     map: petalTexture(THREE),
@@ -260,12 +268,12 @@ export function createARScene(
   for (let i = 0; i < petalCount; i += 1) {
     const petal = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.12), petalMat.clone());
     petal.position.set(
-      (Math.random() - 0.5) * 0.9,
-      (Math.random() - 0.5) * 1,
-      0.1 + Math.random() * 0.25,
+      (Math.random() - 0.5) * 0.5,
+      (Math.random() - 0.5) * 0.45,
+      0.08 + Math.random() * 0.18,
     );
-    petal.userData.speed = 0.04 + Math.random() * 0.06;
-    petal.userData.spin = 0.2 + Math.random() * 0.4;
+    petal.userData.speed = 0.02 + Math.random() * 0.03;
+    petal.userData.spin = 0.08 + Math.random() * 0.14;
     petals.push(petal);
     root.add(petal);
   }
@@ -288,9 +296,11 @@ export function createARScene(
       map: videoTexture,
       transparent: true,
       opacity: 0,
+      side: THREE.DoubleSide,
     });
-    videoMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.533), videoMat);
-    videoMesh.position.set(0, -0.02, 0.18);
+    videoMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.391), videoMat);
+    videoMesh.rotation.x = upright;
+    videoMesh.position.set(0, -0.28, 0.21);
     root.add(videoMesh);
   }
 
@@ -307,6 +317,14 @@ export function createARScene(
 
   let detected = false;
   let opacity = 0;
+  let hasSmooth = false;
+  const smoothPos = new THREE.Vector3();
+  const smoothQuat = new THREE.Quaternion();
+  const smoothScale = new THREE.Vector3(1, 1, 1);
+  const rawPos = new THREE.Vector3();
+  const rawQuat = new THREE.Quaternion();
+  const rawScale = new THREE.Vector3();
+  const STABILIZE = 0.12;
 
   const setOpacity = (value: number) => {
     opacity = value;
@@ -325,6 +343,24 @@ export function createARScene(
   return {
     root,
     hasVideo: Boolean(video),
+    follow(source) {
+      if (!source.visible) return;
+      source.updateMatrixWorld(true);
+      source.matrixWorld.decompose(rawPos, rawQuat, rawScale);
+      if (!hasSmooth) {
+        smoothPos.copy(rawPos);
+        smoothQuat.copy(rawQuat);
+        smoothScale.copy(rawScale);
+        hasSmooth = true;
+      } else {
+        smoothPos.lerp(rawPos, STABILIZE);
+        smoothQuat.slerp(rawQuat, STABILIZE);
+        smoothScale.lerp(rawScale, STABILIZE);
+      }
+      root.position.copy(smoothPos);
+      root.quaternion.copy(smoothQuat);
+      root.scale.copy(smoothScale);
+    },
     setMuted(muted: boolean) {
       if (video) video.muted = muted;
     },
@@ -344,31 +380,22 @@ export function createARScene(
       if (!detected || options.reducedMotion) return;
 
       const t = timeMs * 0.001;
-      rings.rotation.y = Math.sin(t * 0.35) * 0.18;
-      rings.rotation.z = t * 0.12;
-      rings.position.z = 0.26 + Math.sin(t * 1.15) * 0.018;
-      shine.position.set(
-        Math.cos(t * 1.5) * 0.34,
-        0.18 + Math.sin(t * 1.1) * 0.12,
-        0.38 + Math.cos(t * 0.9) * 0.1,
-      );
-      namePlane.position.z = 0.42 + Math.sin(t) * 0.016;
-      datePlane.position.z = 0.28 + Math.cos(t) * 0.012;
-      if (videoMesh) {
-        videoMesh.position.z = 0.18 + Math.sin(t * 0.9) * 0.01;
-      }
+      rings.rotation.y = Math.sin(t * 0.22) * 0.08;
+      rings.position.z = 0.16 + Math.sin(t * 0.7) * 0.008;
+      ringA.rotation.z = t * 0.08;
+      ringB.rotation.z = -t * 0.06;
 
       const positions = sparkGeo.getAttribute("position");
       for (let i = 0; i < sparkCount; i += 1) {
-        const y = positions.getY(i) + 0.0025;
-        positions.setY(i, y > 0.7 ? -0.7 : y);
+        const y = positions.getY(i) + 0.0012;
+        positions.setY(i, y > 0.28 ? -0.28 : y);
       }
       positions.needsUpdate = true;
 
       for (const petal of petals) {
-        petal.position.y -= petal.userData.speed * 0.016;
-        petal.rotation.z += petal.userData.spin * 0.016;
-        if (petal.position.y < -0.7) petal.position.y = 0.7;
+        petal.position.y -= petal.userData.speed * 0.01;
+        petal.rotation.z += petal.userData.spin * 0.01;
+        if (petal.position.y < -0.32) petal.position.y = 0.32;
       }
     },
     dispose() {
@@ -386,7 +413,7 @@ export function createARScene(
       petalMat.map?.dispose();
       for (const material of fadeMaterials) material.dispose();
       envMap.dispose();
-      scene.remove(hemi, key, fill);
+      scene.remove(root, hemi, key, fill);
       hemi.dispose();
       key.dispose();
       fill.dispose();
