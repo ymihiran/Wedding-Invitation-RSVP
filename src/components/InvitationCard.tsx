@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { GoldFlakes } from "@/components/GoldFlakes";
 import { Ornament } from "@/components/Ornament";
 import { RevealCover } from "@/components/RevealCover";
@@ -118,6 +119,9 @@ export function InvitationCard({ guest, preview = false }: InvitationCardProps) 
             <a href={wedding.venue.directionsUrl} target="_blank" rel="noopener noreferrer" className="gold-choice">
               Start Navigation
             </a>
+            <Link href="/ar" className="gold-choice">
+              Experience AR
+            </Link>
           </nav>
         </section>
 

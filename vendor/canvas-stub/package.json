@@ -1,0 +1,7 @@
+{
+  "name": "canvas",
+  "version": "2.11.2",
+  "private": true,
+  "description": "Browser-only stub so mind-ar does not compile native node-canvas.",
+  "main": "index.js"
+}

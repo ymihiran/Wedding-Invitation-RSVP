@@ -1,0 +1,164 @@
+.ar-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.ar-intro {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px calc(48px + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(191, 149, 63, 0.16), transparent 52%),
+    radial-gradient(ellipse at 50% 100%, rgba(191, 149, 63, 0.08), transparent 46%),
+    var(--cream);
+}
+
+.ar-camera-root {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #111;
+}
+
+.ar-camera-root video,
+.ar-camera-root canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.ar-camera-root .css3d-renderer,
+.ar-camera-root > div:last-child {
+  pointer-events: none;
+}
+
+.mindar-ui-overlay {
+  display: none !important;
+}
+
+.ar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 24px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+}
+
+.ar-overlay-copy {
+  max-width: 22rem;
+  color: #fdfbf7;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.ar-scan-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(72vw, 280px);
+  aspect-ratio: 3 / 4;
+  transform: translate(-50%, -54%);
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.ar-scan-frame::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+  animation: ar-scan-line 2.4s ease-in-out infinite;
+}
+
+.ar-scan-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-cinzel), serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(252, 246, 186, 0.9);
+}
+
+.ar-controls {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  right: 12px;
+  z-index: 30;
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.ar-icon-button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 999px;
+  background: rgba(253, 251, 247, 0.92);
+  color: var(--ink);
+  font-family: var(--font-cinzel), serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ar-qr {
+  margin-top: 36px;
+  padding: 28px 24px 24px;
+  background: #fff;
+  border: 1px solid #e8dfd0;
+  border-radius: 6px;
+  box-shadow: 0 18px 40px rgba(93, 71, 58, 0.08);
+}
+
+.ar-qr::after {
+  content: none;
+}
+
+.ar-qr-code {
+  margin: 18px auto 0;
+  padding: 14px;
+  width: fit-content;
+  background: #fff;
+}
+
+@keyframes ar-scan-line {
+  0%,
+  100% {
+    top: 12%;
+    opacity: 0.35;
+  }
+  50% {
+    top: 82%;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ar-scan-frame::after,
+  .gold-seal {
+    animation: none;
+  }
+}
