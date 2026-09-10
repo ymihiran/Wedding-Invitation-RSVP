@@ -219,8 +219,8 @@ export function createARScene(
   ringB.position.set(0.08, 0.008, 0.008);
   ringB.scale.setScalar(0.94);
   const rings = new THREE.Group();
-  rings.position.set(0, -0.02, 0.16);
-  rings.renderOrder = 4;
+  rings.position.set(0, -0.06, 0.13);
+  rings.renderOrder = 6;
   const shine = new THREE.PointLight(0xfff6d8, 1.15, 1.5);
   shine.position.set(0.2, 0.16, 0.28);
   rings.add(ringA, ringB, shine);
@@ -243,12 +243,12 @@ export function createARScene(
     depthWrite: false,
     side: THREE.DoubleSide,
   });
-  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.58), nameMat);
-  const datePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.1), dateMat);
+  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.42), nameMat);
+  const datePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.58, 0.09), dateMat);
   namePlane.rotation.x = upright;
-  datePlane.rotation.x = upright;
-  namePlane.position.set(0, 0.18, 0.34);
-  datePlane.position.set(0, 0.18, 0.05);
+  datePlane.rotation.x = 0.18;
+  namePlane.position.set(0, 0.06, 0.7);
+  datePlane.position.set(0, -0.38, 0.03);
   namePlane.renderOrder = 5;
   datePlane.renderOrder = 5;
   root.add(namePlane, datePlane);
@@ -355,12 +355,12 @@ export function createARScene(
       map: videoTexture,
       transparent: true,
       opacity: 0,
-      depthWrite: false,
+      depthWrite: true,
       side: THREE.DoubleSide,
     });
-    videoMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.284), videoMat);
+    videoMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.604), videoMat);
     videoMesh.rotation.x = upright;
-    videoMesh.position.set(0.4, -0.06, 0.15);
+    videoMesh.position.set(0, 0.04, 0.32);
     videoMesh.renderOrder = 1;
     root.add(videoMesh);
   }
@@ -444,7 +444,7 @@ export function createARScene(
 
       const t = timeMs * 0.001;
       rings.rotation.y = Math.sin(t * 0.22) * 0.08;
-      rings.position.z = 0.16 + Math.sin(t * 0.7) * 0.008;
+      rings.position.z = 0.13 + Math.sin(t * 0.7) * 0.006;
       ringA.rotation.z = t * 0.08;
       ringB.rotation.z = -t * 0.06;
 
