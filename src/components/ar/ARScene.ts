@@ -206,10 +206,10 @@ export function createARScene(
     opacity: 0,
     depthWrite: false,
   });
-  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.7), nameMat);
+  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.55), nameMat);
   const datePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.13), dateMat);
-  namePlane.position.set(0, 0.42, 0.14);
-  datePlane.position.set(0, -0.38, 0.1);
+  namePlane.position.set(0, 0.06, 0.42);
+  datePlane.position.set(0, -0.22, 0.28);
   root.add(namePlane, datePlane);
 
   void document.fonts.ready.then(() => {
@@ -289,8 +289,8 @@ export function createARScene(
       transparent: true,
       opacity: 0,
     });
-    videoMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.42), videoMat);
-    videoMesh.position.set(0, -0.02, 0.04);
+    videoMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.533), videoMat);
+    videoMesh.position.set(0, -0.02, 0.18);
     root.add(videoMesh);
   }
 
@@ -352,8 +352,11 @@ export function createARScene(
         0.18 + Math.sin(t * 1.1) * 0.12,
         0.38 + Math.cos(t * 0.9) * 0.1,
       );
-      namePlane.position.y = 0.42 + Math.sin(t) * 0.012;
-      datePlane.position.y = -0.38 + Math.cos(t) * 0.008;
+      namePlane.position.z = 0.42 + Math.sin(t) * 0.016;
+      datePlane.position.z = 0.28 + Math.cos(t) * 0.012;
+      if (videoMesh) {
+        videoMesh.position.z = 0.18 + Math.sin(t * 0.9) * 0.01;
+      }
 
       const positions = sparkGeo.getAttribute("position");
       for (let i = 0; i < sparkCount; i += 1) {

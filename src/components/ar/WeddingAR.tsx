@@ -22,7 +22,7 @@ import "./ar.css";
 export function WeddingAR() {
   const [status, setStatus] = useState<ARStatus>("idle");
   const [error, setError] = useState<ARErrorState | null>(null);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [hasVideo, setHasVideo] = useState(false);
   const desktop = useMemo(
     () => (typeof window === "undefined" ? false : isLikelyDesktop()),
@@ -40,7 +40,7 @@ export function WeddingAR() {
   const reset = useCallback(() => {
     setError(null);
     setHasVideo(false);
-    setMuted(true);
+    setMuted(false);
     setPreparing(false);
     setStatus("idle");
   }, []);
