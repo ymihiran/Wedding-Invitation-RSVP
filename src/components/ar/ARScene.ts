@@ -58,20 +58,27 @@ function drawStackedNames(ctx: CanvasRenderingContext2D) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   const x = width / 2;
-  const foil = goldGradient(ctx, width * 0.18, height * 0.08, width * 0.82, height * 0.92);
-  ctx.strokeStyle = "rgba(90, 64, 28, 0.45)";
-  ctx.lineWidth = 3;
+  const foil = goldGradient(ctx, width * 0.12, height * 0.06, width * 0.88, height * 0.94);
   ctx.lineJoin = "round";
+  ctx.miterLimit = 2;
+  ctx.shadowColor = "rgba(40, 28, 14, 0.45)";
+  ctx.shadowBlur = 18;
 
-  ctx.font = "88px 'Great Vibes', 'Playfair Display', serif";
+  ctx.font = "132px 'Great Vibes', 'Playfair Display', serif";
+  ctx.strokeStyle = "rgba(58, 40, 22, 0.78)";
+  ctx.lineWidth = 10;
   ctx.strokeText(wedding.groom.first, x, height * 0.24);
   ctx.fillStyle = foil;
   ctx.fillText(wedding.groom.first, x, height * 0.24);
 
-  ctx.font = "40px 'Cormorant Garamond', serif";
+  ctx.shadowBlur = 8;
+  ctx.font = "64px 'Cormorant Garamond', serif";
+  ctx.strokeText("&", x, height * 0.5);
+  ctx.fillStyle = foil;
   ctx.fillText("&", x, height * 0.5);
 
-  ctx.font = "88px 'Great Vibes', 'Playfair Display', serif";
+  ctx.shadowBlur = 18;
+  ctx.font = "132px 'Great Vibes', 'Playfair Display', serif";
   ctx.strokeText(wedding.bride.first, x, height * 0.76);
   ctx.fillStyle = foil;
   ctx.fillText(wedding.bride.first, x, height * 0.76);
@@ -82,8 +89,14 @@ function drawDate(ctx: CanvasRenderingContext2D) {
   ctx.clearRect(0, 0, width, height);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "36px Cinzel, 'Cormorant Garamond', serif";
-  ctx.fillStyle = goldGradient(ctx, width * 0.15, 0, width * 0.85, height);
+  ctx.font = "52px Cinzel, 'Cormorant Garamond', serif";
+  ctx.lineJoin = "round";
+  ctx.shadowColor = "rgba(40, 28, 14, 0.4)";
+  ctx.shadowBlur = 10;
+  ctx.strokeStyle = "rgba(58, 40, 22, 0.72)";
+  ctx.lineWidth = 6;
+  ctx.strokeText(wedding.dateDisplay, width / 2, height / 2);
+  ctx.fillStyle = goldGradient(ctx, width * 0.1, 0, width * 0.9, height);
   ctx.fillText(wedding.dateDisplay, width / 2, height / 2);
 }
 
@@ -147,6 +160,23 @@ function petalTexture(THREE: ThreeNS): THREE.CanvasTexture {
   });
 }
 
+function flakeTexture(THREE: ThreeNS): THREE.CanvasTexture {
+  return makeCanvasTexture(THREE, 64, 64, (ctx) => {
+    const gradient = ctx.createLinearGradient(16, 8, 48, 56);
+    gradient.addColorStop(0, "#fcf6ba");
+    gradient.addColorStop(0.45, "#d4af37");
+    gradient.addColorStop(1, "#aa771c");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(32, 6);
+    ctx.lineTo(52, 32);
+    ctx.lineTo(32, 58);
+    ctx.lineTo(12, 32);
+    ctx.closePath();
+    ctx.fill();
+  });
+}
+
 function sparkTexture(THREE: ThreeNS): THREE.CanvasTexture {
   return makeCanvasTexture(THREE, 32, 32, (ctx) => {
     const gradient = ctx.createRadialGradient(16, 16, 1, 16, 16, 15);
@@ -190,6 +220,7 @@ export function createARScene(
   ringB.scale.setScalar(0.94);
   const rings = new THREE.Group();
   rings.position.set(0, -0.02, 0.16);
+  rings.renderOrder = 4;
   const shine = new THREE.PointLight(0xfff6d8, 1.15, 1.5);
   shine.position.set(0.2, 0.16, 0.28);
   rings.add(ringA, ringB, shine);
@@ -212,12 +243,14 @@ export function createARScene(
     depthWrite: false,
     side: THREE.DoubleSide,
   });
-  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.34), nameMat);
-  const datePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.055), dateMat);
+  const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.82, 0.58), nameMat);
+  const datePlane = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.1), dateMat);
   namePlane.rotation.x = upright;
   datePlane.rotation.x = upright;
-  namePlane.position.set(0, 0.2, 0.22);
-  datePlane.position.set(0, 0.2, 0.04);
+  namePlane.position.set(0, 0.18, 0.34);
+  datePlane.position.set(0, 0.18, 0.05);
+  namePlane.renderOrder = 5;
+  datePlane.renderOrder = 5;
   root.add(namePlane, datePlane);
 
   void document.fonts.ready.then(() => {
@@ -278,6 +311,32 @@ export function createARScene(
     root.add(petal);
   }
 
+  const flakeCount = options.reducedMotion ? 0 : 20;
+  const flakes: THREE.Mesh[] = [];
+  const flakeMat = new THREE.MeshBasicMaterial({
+    map: flakeTexture(THREE),
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const flakeGeo = new THREE.PlaneGeometry(0.028, 0.04);
+  for (let i = 0; i < flakeCount; i += 1) {
+    const flake = new THREE.Mesh(flakeGeo, flakeMat.clone());
+    flake.position.set(
+      (Math.random() - 0.5) * 0.7,
+      (Math.random() - 0.5) * 0.55,
+      0.08 + Math.random() * 0.48,
+    );
+    flake.userData.speed = 0.012 + Math.random() * 0.02;
+    flake.userData.sway = Math.random() * Math.PI * 2;
+    flake.userData.swayAmp = 0.004 + Math.random() * 0.008;
+    flake.userData.spin = (Math.random() - 0.5) * 0.04;
+    flake.renderOrder = 6;
+    flakes.push(flake);
+    root.add(flake);
+  }
+
   let video: HTMLVideoElement | null = null;
   let videoMesh: THREE.Mesh | null = null;
   let videoTexture: THREE.VideoTexture | null = null;
@@ -296,11 +355,13 @@ export function createARScene(
       map: videoTexture,
       transparent: true,
       opacity: 0,
+      depthWrite: false,
       side: THREE.DoubleSide,
     });
-    videoMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.391), videoMat);
+    videoMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.284), videoMat);
     videoMesh.rotation.x = upright;
-    videoMesh.position.set(0, -0.28, 0.21);
+    videoMesh.position.set(0.4, -0.06, 0.15);
+    videoMesh.renderOrder = 1;
     root.add(videoMesh);
   }
 
@@ -312,6 +373,8 @@ export function createARScene(
     sparkMat,
     petalMat,
     ...petals.map((petal) => petal.material as THREE.Material),
+    flakeMat,
+    ...flakes.map((flake) => flake.material as THREE.Material),
   ];
   if (videoMesh) fadeMaterials.push(videoMesh.material as THREE.Material);
 
@@ -397,6 +460,19 @@ export function createARScene(
         petal.rotation.z += petal.userData.spin * 0.01;
         if (petal.position.y < -0.32) petal.position.y = 0.32;
       }
+
+      for (const flake of flakes) {
+        flake.userData.sway += 0.018;
+        flake.position.z -= flake.userData.speed;
+        flake.position.x += Math.sin(flake.userData.sway) * flake.userData.swayAmp;
+        flake.rotation.z += flake.userData.spin;
+        flake.rotation.x += flake.userData.spin * 0.35;
+        if (flake.position.z < 0.03) {
+          flake.position.z = 0.55;
+          flake.position.x = (Math.random() - 0.5) * 0.7;
+          flake.position.y = (Math.random() - 0.5) * 0.55;
+        }
+      }
     },
     dispose() {
       video?.pause();
@@ -411,6 +487,8 @@ export function createARScene(
       dateTexture.dispose();
       sparkMat.map?.dispose();
       petalMat.map?.dispose();
+      flakeMat.map?.dispose();
+      flakeGeo.dispose();
       for (const material of fadeMaterials) material.dispose();
       envMap.dispose();
       scene.remove(root, hemi, key, fill);
