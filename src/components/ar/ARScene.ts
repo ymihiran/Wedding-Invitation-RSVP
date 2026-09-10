@@ -214,16 +214,20 @@ export function createARScene(
   const ringGeo = new THREE.TorusGeometry(0.11, 0.014, 32, 96);
   const ringA = new THREE.Mesh(ringGeo, gold);
   const ringB = new THREE.Mesh(ringGeo, goldB);
-  ringA.rotation.set(Math.PI / 2.05, 0.16, 0.1);
-  ringB.rotation.set(Math.PI / 2.35, Math.PI / 2.05, -0.14);
-  ringB.position.set(0.08, 0.008, 0.008);
-  ringB.scale.setScalar(0.94);
+  const pivotA = new THREE.Group();
+  pivotA.rotation.set(Math.PI / 2.05, 0.16, 0.1);
+  pivotA.add(ringA);
+  const pivotB = new THREE.Group();
+  pivotB.rotation.set(Math.PI / 2.35, Math.PI / 2.05, -0.14);
+  pivotB.position.set(0.08, 0.008, 0.008);
+  pivotB.scale.setScalar(0.94);
+  pivotB.add(ringB);
   const rings = new THREE.Group();
   rings.position.set(0, -0.06, 0.13);
   rings.renderOrder = 6;
   const shine = new THREE.PointLight(0xfff6d8, 1.15, 1.5);
   shine.position.set(0.2, 0.16, 0.28);
-  rings.add(ringA, ringB, shine);
+  rings.add(pivotA, pivotB, shine);
   root.add(rings);
 
   const upright = Math.PI / 2 - 0.2;
@@ -443,10 +447,10 @@ export function createARScene(
       if (!detected || options.reducedMotion) return;
 
       const t = timeMs * 0.001;
-      rings.rotation.y = Math.sin(t * 0.22) * 0.08;
+      rings.rotation.y = t * 0.35;
       rings.position.z = 0.13 + Math.sin(t * 0.7) * 0.006;
-      ringA.rotation.z = t * 0.08;
-      ringB.rotation.z = -t * 0.06;
+      ringA.rotation.z = t * 1.1;
+      ringB.rotation.z = -t * 0.85;
 
       const positions = sparkGeo.getAttribute("position");
       for (let i = 0; i < sparkCount; i += 1) {
